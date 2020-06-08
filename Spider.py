@@ -16,15 +16,15 @@ def fetchHtml(url):
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
         'Connection': 'keep-alive',
-        'Cookie': 'guider_quick_search=on; listStyle=bigPhoto; is_searchv2=1; accessID=20200604232736840404; _gscu_1380850711=91496892rotxk867; save_jy_login_name=18616361446; stadate1=248684527; myloc=31%7C3109; myage=30; mysex=m; myuid=248684527; myincome=30; user_attr=000000; pop_sj=0; skhistory_f=a%3A2%3A%7Bi%3A1591497298%3Bs%3A6%3A%22%E4%B8%8A%E6%B5%B7%22%3Bi%3A1591284471%3Bs%3A3%3A%22%E7%94%B7%22%3B%7D; SESSION_HASH=02b5a9f52d722638a028c547f9397fe62c010dcf; user_access=1; COMMON_HASH=2e7d0dcddcbb3dcd46100bcc400a1df6; sl_jumper=%26cou%3D17%26omsg%3D0%26dia%3D0%26lst%3D2020-06-08; last_login_time=1591621109; upt=Z2l0icRJXf7I9lREUQVcask-2vaaCR0OaV7QKdOUftz-IlYWutInsReAkDC1mWu%2Avm1MXL5PRrgVAoT267RQHQU.; PROFILE=249684527%3Ajh%3Am%3Aimages1.jyimg.com%2Fw4%2Fglobal%2Fi%3A0%3A%3A1%3Azwzp_m.jpg%3A1%3A1%3A50%3A10%3A3.0; PHPSESSID=7093a51ea947697cd96f0a6515020472; pop_avatar=1; main_search:249684527=%7C%7C%7C00; RAW_HASH=X9OJhlcnfHRJD1XkIk9IlCL83sKDl84wUlrzNM-bn9cSMm7cjso2fgk3MM0HowINKPYGTGYiKyvUSY3pp-OMHFyUBxol9nWjswIDEfMMTWfgojk.; pop_time=1591621173301'
+        'Cookie': 'guider_quick_search=on; listStyle=bigPhoto; is_searchv2=1; accessID=20200604232736840404; _gscu_1380850711=91496892rotxk867; save_jy_login_name=18616361446; stadate1=248684527; myloc=31%7C3109; myage=30; mysex=m; myuid=248684527; myincome=30; user_attr=000000; pop_sj=0; skhistory_f=a%3A2%3A%7Bi%3A1591497298%3Bs%3A6%3A%22%E4%B8%8A%E6%B5%B7%22%3Bi%3A1591284471%3Bs%3A3%3A%22%E7%94%B7%22%3B%7D; SESSION_HASH=02b5a9f52d722638a028c547f9397fe62c010dcf; user_access=1; COMMON_HASH=2e7d0dcddcbb3dcd46100bcc400a1df6; last_login_time=1591621109; upt=Z2l0icRJXf7I9lREUQVcask-2vaaCR0OaV7QKdOUftz-IlYWutInsReAkDC1mWu%2Avm1MXL5PRrgVAoT267RQHQU.; PROFILE=249684527%3Ajh%3Am%3Aimages1.jyimg.com%2Fw4%2Fglobal%2Fi%3A0%3A%3A1%3Azwzp_m.jpg%3A1%3A1%3A50%3A10%3A3.0; PHPSESSID=7093a51ea947697cd96f0a6515020472; pop_avatar=1; main_search:249684527=%7C%7C%7C00; RAW_HASH=X9OJhlcnfHRJD1XkIk9IlCL83sKDl84wUlrzNM-bn9cSMm7cjso2fgk3MM0HowINKPYGTGYiKyvUSY3pp-OMHFyUBxol9nWjswIDEfMMTWfgojk.; pop_time=1591630111427'
     }
     try:
         r = requests.get(url, headers=headers)
         r.raise_for_status()
-        r.encoding = 'unicode_escape'
+        # r.encoding = 'unicode_escape'
         # r.encoding=r.apparent_encoding
         print(r.url)
-        str = r.text.replace('\n', '').replace('\r', '').replace("  伀筶 疼 Уán茚", "XX")  # 用于处理text中的乱码，但是数量太多了，使用try直接跳过
+        str = r.text.replace("##jiayser##","")
         return str
     except requests.HTTPError as e:
         print(e)
@@ -98,8 +98,8 @@ def dropDuplicates():  # 去重
 
 
 if __name__ == '__main__':
-    for pageNo in range(1, 2000):  # 最后的值即为爬取的总页数，手动修改数值即可。总页数可以在printhtml的pageTotal中得到。
-        url = 'http://search.jiayuan.com/v2/search_v2.php?key=&sex=f&stc=2:18.31,3:155.175,23:1&sn=default&sv=1&p={0}&f=select'.format(pageNo) #sex=f即为女性，sex=m即为男性。stc=2:18.31表示年龄18-31，3:155.175表示身高范围, 23:1表示有照片
+    for pageNo in range(1, 400):  # 最后的值即为爬取的总页数，手动修改数值即可。总页数可以在printhtml的pageTotal中得到。
+        url = 'https://search.jiayuan.com/v2/search_v2.php?key=&sex=f&stc=2:18.31,3:155.175,23:1&sn=default&sv=1&p={0}&f=select'.format(pageNo) #sex=f即为女性，sex=m即为男性。stc=2:18.31表示年龄18-31，3:155.175表示身高范围, 23:1表示有照片
         try:
             html = fetchHtml(url)
             # print(html)
