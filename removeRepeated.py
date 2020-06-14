@@ -6,6 +6,9 @@ import glob
 frame = pd.read_csv("E:\PythonProjects\sjjy\世纪佳缘_UserInfo.csv",index_col=0);
 ##去重
 data = frame.drop_duplicates()
+##去掉引号
+
+
 ##把文件写到
 data.to_csv("E:\PythonProjects\sjjy\listWithoutDuplicated.csv")
 
