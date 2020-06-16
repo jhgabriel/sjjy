@@ -1,25 +1,34 @@
+import multiprocessing
+import pandas as pd
+import numpy as np
+import jieba
+import pickle
+np.random.seed(1337)  # For Reproducibility
+
+
 import yaml
 import sys
 #from sklearn.cross_validation import train_test_split
 from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
 
-import multiprocessing
-import numpy as np
+
 from gensim.models import Doc2Vec
 from gensim.corpora.dictionary import Dictionary
 from gensim.models import Word2Vec
 
+import keras
+import keras.utils
+from keras import utils as np_utils
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM
 from keras.layers.core import Dense, Dropout,Activation
 from keras.models import model_from_yaml
-np.random.seed(1337)  # For Reproducibility
-import jieba
-import pandas as pd
-import pickle
+
+
+
 
 sys.setrecursionlimit(1000000)#递归的最大深度
 #%% set parameters:
@@ -36,7 +45,7 @@ cpu_count = multiprocessing.cpu_count()
 
 #%%加载训练文件
 def loadfile():
-    df = pd.read_csv('../marked.csv',
+    df = pd.read_csv('./jiayuan/marked.csv',
                            names=['uid', 'nickname', 'sex', 'y', 'work_location', 'height', 'education',
                                   'matchCondition', 'marriage', 'income', 'shortnote', 'image','Y'])
 
@@ -56,14 +65,15 @@ def loadfile():
 
 
     print(type(df))
-    combined= df.as_matrix(['nickname'])
-    y = df.as_matrix(['y'])#添加标注
+    combined= df['nickname'].to_numpy()
+    y = df['y'].to_numpy()#添加标注
     print(type(combined))
     print(type(y))
     return combined,y
-loadfile()
+
 #%%对句子进行分词，并去掉换行符
 def tokenizer(text):
+    #text = [print(type(document)) for document in text]
     text = [jieba.lcut(document.replace('\n', '')) for document in text]
     return text
 
@@ -121,7 +131,9 @@ def get_data(index_dict,word_vectors,combined,y):
         embedding_weights[index, :] = word_vectors[word]
         
     x_train, x_test, y_train, y_test = train_test_split(combined, y, test_size=0.2)
-    print(x_train.shape,y_train.shape)
+    y_train = keras.utils.to_categorical(y_train,num_classes=3) 
+    y_test = keras.utils.to_categorical(y_test,num_classes=3)
+    # print x_train.shape,y_train.shape
     return n_symbols,embedding_weights,x_train,y_train,x_test,y_test
 
 
@@ -210,11 +222,11 @@ def lstm_predict(string):
     #print data
     result=model.predict_classes(data)
     if result[0]==1:
-        print string,' 优秀'
+        print(string,' 优秀')
     elif result[0]==0:
-        print string,' 良好'
+        print(string,' 良好')
     else:
-        print string,' 一般'
+        print(string,' 一般')
 
 
 def test_model():
