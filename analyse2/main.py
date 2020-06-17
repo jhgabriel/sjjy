@@ -46,18 +46,17 @@ cpu_count = multiprocessing.cpu_count()
 #%%加载训练文件
 def loadfile():
     df = pd.read_csv('./jiayuan/marked.csv',
-                           names=['uid', 'nickname', 'sex', 'y', 'work_location', 'height', 'education',
-                                  'matchCondition', 'marriage', 'income', 'shortnote', 'image','Y'])
-
+                           names=['uid', 'nickname', 'sex', 'age', 'work_location', 'height', 'education',
+                                  'matchCondition', 'marriage', 'income', 'shortnote', 'image','judge'])
+    df['y'] = 0
     for index,r in df.iterrows():
-        r['nickname'] = r['education']+';'+r['marriage']+';'+r['shortnote']
-        df['nickname'][index]= r['nickname']
-        if r['Y'] == '一般':
-            r['y']= -1
+        #df['nickname'][index]= r['education']+';'+r['marriage']+';'+r['shortnote']
+        df['nickname'][index]= r['education']+';'+str(r['age'])
+        if r['judge'] == '一般':
             df['y'][index]= -1
-        elif r['Y'] == '良好':
+        elif r['judge'] == '良好':
             df['y'][index]= 0
-        elif r['Y'] == '优秀':
+        elif r['judge'] == '优秀':
             df['y'][index]= 1
         else:
             print("bad data")
@@ -75,6 +74,7 @@ def loadfile():
 def tokenizer(text):
     #text = [print(type(document)) for document in text]
     text = [jieba.lcut(document.replace('\n', '')) for document in text]
+    print(text)
     return text
 
 
@@ -229,14 +229,17 @@ def lstm_predict(string):
         print(string,' 一般')
 
 
-def test_model():
-    string='本科;未婚;我想我会一直孤单'#1
-    lstm_predict(string)  
 
+
+def test_model():
+    string='本科;26'
+    lstm_predict(string)  
+    string='硕士;31'
+    lstm_predict(string) 
 
 #%%测试
 if __name__=='__main__':
-    train_model()
+    #train_model()
     test_model()
 
 
