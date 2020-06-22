@@ -17,9 +17,9 @@ writer = csv.writer(writeFile)
 
 ##按行操作文件
 for one_line in csv_reader_lines:
-    if int(one_line[3]) < 26:
+    if int(one_line[3]) < 28 and (one_line[6] == '本科' or  one_line[6] =='双学士' or one_line[6] =='硕士' or one_line[6] =='博士'):
       one_line.append('优秀')
-    elif int(one_line[3]) < 30:
+    elif int(one_line[3]) < 30 and (one_line[6] == '本科' or  one_line[6] =='双学士' or one_line[6] =='硕士' or one_line[6] =='博士' or one_line[6] =='大专' ):
       one_line.append('良好')
     else:
       one_line.append('一般')
