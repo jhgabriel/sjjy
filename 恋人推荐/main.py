@@ -253,23 +253,49 @@ def test_model():
     lstm_predict(string)  
 
 
+base_education_score = {"未知":20,"高中中专及以下":30,"大专":50,"本科":90,"硕士":100,"双学士":100,"博士":110}
+base_shortnote_score = {"平凡":30,"优秀":50,"卓越":100}
+base_shortnoteindex_score = [30,50,100]
+base_age_section = [[22,30],[24,32]]
+base_height_section = [[160,175],[168,185]]
 
-base_score = {"未知":0,"高中中专及以下":1,"大专":2,"本科":3,"硕士":4,"双学士":3.5,"博士":5}
 def score_item(model,sex,age,education,height,shortnote):
     def get_age_score(sex,age):
+        score = 30
+        sec = base_age_section[1]
         if(sex == "女"):
-            return 0.25* (100-abs(age-24))
-        else:
-            return 0.25* (100-abs(age-28))
+            sec = base_age_section[0]
+
+        if(age < sec[0]):
+            score -= abs(sec[0]-age);
+
+        if(age > sec[1]):
+            score -= abs(age-sec[1]);
+
+        if(score<0):
+            score = 0; 
+              
+        return score;
 
     def get_height_score(sex,height):
+        score = 30
+        sec = base_height_section[1]
         if(sex == "女"):
-            return 0.25* (100-abs(height-165))
-        else:
-            return 0.25* (100-abs(height-170))
+            sec = base_height_section[0]
+
+        if(height < sec[0]):
+            score -= abs(sec[0]-height);
+
+        if(height > sec[1]):
+            score -= abs(height-sec[1]);
+
+        if(score<0):
+            score = 0; 
+              
+        return score;
 
     def get_education_score(sex,education):
-        return base_score[education]*0.25;
+        return base_education_score[education]*1.0;
 
     def get_shortnote_score(sex,shortnote):
         if(pd.isna(shortnote)):
@@ -277,14 +303,19 @@ def score_item(model,sex,age,education,height,shortnote):
 
         data=input_transform(shortnote)
         data.reshape(1,-1)
-        #print data
         class_index=model.predict_classes(data)
-        return 0.25* class_index
+        return base_shortnoteindex_score[class_index[0]]
 
-    return get_age_score(sex,age) + \
+
+    return (get_age_score(sex,age) + \
             get_education_score(sex,education) + \
             get_height_score(sex,height) + \
+            get_shortnote_score(sex,shortnote) ,
+            get_age_score(sex,age),
+            get_education_score(sex,education),
+            get_height_score(sex,height),
             get_shortnote_score(sex,shortnote) 
+    );
 
 
 def create_score_file(file_path):
@@ -296,6 +327,11 @@ def create_score_file(file_path):
                            names=['uid', 'nickname', 'sex', 'age', 'work_location', 'height', 'education',
                                   'matchCondition', 'marriage', 'income', 'shortnote', 'image'])
     df['score'] = 0 # 新增一列分值列
+
+    df['age_score'] = 0 # 新增一列分值列
+    df['eduction_score'] = 0 # 新增一列分值列
+    df['height_score'] = 0 # 新增一列分值列
+    df['shortnote_score'] = 0 # 新增一列分值列
     with open('./model/lstm.yml', 'r') as f:
         yaml_string = yaml.load(f)
     model = model_from_yaml(yaml_string)
@@ -307,7 +343,9 @@ def create_score_file(file_path):
 
 
     for index,r in df.iterrows():
-        df['score'][index]= score_item(model,r['sex'],r['age'],r['education'],r['height'],r['shortnote'])
+        #df['score'][index]= score_item(model,r['sex'],r['age'],r['education'],r['height'],r['shortnote'])[0]
+        df['score'][index],df['age_score'][index],df['eduction_score'][index],df['height_score'][index],df['shortnote_score'][index]= score_item(model,r['sex'],r['age'],r['education'],r['height'],r['shortnote'])
+
         print("%d:(%.2f) %s" % (index,df['score'][index],r['shortnote']))
 
     output_path = os.path.join('.','model',name+"_score.csv");
@@ -325,7 +363,7 @@ def match_lover(sex,age,education,height,shortnote):
         model = model_from_yaml(yaml_string)
         model.load_weights('./model/lstm.h5')
         model.compile(loss='categorical_crossentropy', optimizer='adam',metrics=['accuracy'])
-        score = score_item(model,sex,age,education,height,shortnote)
+        score = score_item(model,sex,age,education,height,shortnote)[0]
 
         file_path= get_file_path_in_model('世纪佳缘_去重_UserInfo_女_score.csv')
         if(sex=="女"):
@@ -333,7 +371,7 @@ def match_lover(sex,age,education,height,shortnote):
         print(file_path)
         df = pd.read_csv(file_path,#nrows=100,
                            names=['uid', 'nickname', 'sex', 'age', 'work_location', 'height', 'education',
-                                  'matchCondition', 'marriage', 'income', 'shortnote', 'image','score'])
+                                  'matchCondition', 'marriage', 'income', 'shortnote', 'image','score','age_score','education_score','height_score','shortnote_score'])
 
         count = 0;
         for index,r in df.iterrows(): 
