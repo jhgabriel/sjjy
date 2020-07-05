@@ -17,23 +17,64 @@ def find_and_parse_value(value, area_dic):
     return "未知地区"
 
 
+# 最初为了处理区域，后来对其他特征也做了分组排序操作
 def handle_area(gender):
     df = pd.read_csv('../世纪佳缘_去重_UserInfo_{}.csv'.format(gender), encoding='utf-8-sig', # nrows=10,
                      names=['uid', 'nickname', 'sex', 'age', 'work_location', 'height', 'education',
-                                  'matchCondition', 'marriage', 'income', 'shortnote', 'image'])
+                            'matchCondition', 'marriage', 'income', 'shortnote', 'image'])
+
+    # 遍历并更新区域到省级
     for index, row in df.iterrows():
         v = find_and_parse_value(row['work_location'], area_dict)
         # print("%s, %s" % (row['work_location'], v))
         if v != '未知地区':
             df.loc[index, 'work_location'] = v
-    # 根据最新的work_location进行分组，调用size函数计算每组的个数，命名新列为count，得到一个Series格式的数据
-    series = df.groupby('work_location').agg(count=pd.NamedAgg(column='work_location', aggfunc='size'))
+
+    # 分别对age、work_location和education做分组和排序，并将排序后的数据存入excel
+    for field in ['age', 'work_location', 'education']:
+        group_sort(df, gender, field)
+
+    # 对身高按区间进行切分和统计，写入csv
+    cut_height(df, gender)
+
+    # 最新数据存入csv，设置编码格式（否则excel打开会中文乱码），去掉表头和行号列
+    df.to_csv('世纪佳缘_去重_UserInfo_{}_area.csv'.format(gender), encoding='utf-8-sig', index=False, header=False)
+
+
+# 将分组和排序独立出来，用于做其他特征的可视化
+def group_sort(df, gender, field):
+    # 根据传入的特征字段field进行分组，调用size函数计算每组的个数，命名新列为count，得到一个Series格式的数据
+    series = df.groupby(field).agg(count=pd.NamedAgg(column=field, aggfunc='size'))
     # print(series)
     # 分组后的数据按照count列倒序排序
     sdf = series.reset_index().sort_values(by='count', ascending=False)
     # 写入excel文件，用于实现可视化（数可视）
-    sdf.to_excel("{}_area_group.xls".format(gender))
-    # df.to_csv('世纪佳缘_去重_UserInfo_{}_area.csv'.format(gender), encoding='utf-8-sig', index=False, header=False)
+    sdf.to_excel("{}_{}_group.xls".format(gender, field))
+
+
+"""
+    pandas.cut(x,bins,right=True,labels=None,retbins=False,precision=3,include_lowest=False)
+    x:需要切分的数据
+    bins:切分区域
+    right : 是否包含右端点默认True，包含
+    labels:对应标签，用标记来代替返回的bins，若不在该序列中，则返回NaN
+    retbins:是否返回间距bins
+    precision:精度
+    include_lowest:是否包含左端点，默认False，不包含
+"""
+# 对身高做特殊处理，以5cm为间隔进行切分统计
+def cut_height(df, gender):
+    # 设置切分区域
+    list_bins = [155, 160, 165, 170, 175, 180, 185, 190]
+
+    # 设置切分后对应标签
+    list_labels = ['155-160','160-165','165-170','170-175','175-180','180-185','185-190']
+
+    # 利用pd.cut进行数据离散化切分
+    height = pd.cut(df['height'], bins=list_bins, labels=list_labels, include_lowest=True)
+    # 计算每组数量并打印输出
+    print(pd.value_counts(height))
+    pd.value_counts(height).to_csv("{}_height_group_agg.csv".format(gender))
 
 
 if __name__ == '__main__':
