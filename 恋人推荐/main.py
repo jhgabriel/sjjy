@@ -253,23 +253,49 @@ def test_model():
     lstm_predict(string)  
 
 
+base_education_score = {"未知":20,"高中中专及以下":30,"大专":50,"本科":90,"硕士":100,"双学士":100,"博士":110}
+base_shortnote_score = {"平凡":30,"优秀":50,"卓越":100}
+base_shortnoteindex_score = [30,50,100]
+base_age_section = [[22,30],[24,32]]
+base_height_section = [[160,175],[168,185]]
 
-base_score = {"未知":0,"高中中专及以下":1,"大专":2,"本科":3,"硕士":4,"双学士":3.5,"博士":5}
 def score_item(model,sex,age,education,height,shortnote):
     def get_age_score(sex,age):
+        score = 30
+        sec = base_age_section[1]
         if(sex == "女"):
-            return 0.25* (100-abs(age-24))
-        else:
-            return 0.25* (100-abs(age-28))
+            sec = base_age_section[0]
+
+        if(age < sec[0]):
+            score -= abs(sec[0]-age);
+
+        if(age > sec[1]):
+            score -= abs(age-sec[1]);
+
+        if(score<0):
+            score = 0; 
+              
+        return score;
 
     def get_height_score(sex,height):
+        score = 30
+        sec = base_height_section[1]
         if(sex == "女"):
-            return 0.25* (100-abs(height-165))
-        else:
-            return 0.25* (100-abs(height-170))
+            sec = base_height_section[0]
+
+        if(height < sec[0]):
+            score -= abs(sec[0]-height);
+
+        if(height > sec[1]):
+            score -= abs(height-sec[1]);
+
+        if(score<0):
+            score = 0; 
+              
+        return score;
 
     def get_education_score(sex,education):
-        return base_score[education]*0.25;
+        return base_education_score[education]*1.0;
 
     def get_shortnote_score(sex,shortnote):
         if(pd.isna(shortnote)):
@@ -277,9 +303,8 @@ def score_item(model,sex,age,education,height,shortnote):
 
         data=input_transform(shortnote)
         data.reshape(1,-1)
-        #print data
         class_index=model.predict_classes(data)
-        return 0.25* class_index
+        return base_shortnoteindex_score[class_index[0]]
 
     return get_age_score(sex,age) + \
             get_education_score(sex,education) + \
@@ -354,7 +379,7 @@ if __name__=='__main__':
     #test_model() # 打开本行注释以简单测试几个用例
 
     #为真实数据生成 score 文件
-    #score_all()
+    score_all()
 
     #根据score数据做推荐，输入自身数据，给出若干匹配对象
     match_lover('男',28,'本科',177,'我本善良')
