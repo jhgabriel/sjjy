@@ -306,7 +306,6 @@ def score_item(model,sex,age,education,height,shortnote):
         class_index=model.predict_classes(data)
         return base_shortnoteindex_score[class_index[0]]
 
-
     return (get_age_score(sex,age) + \
             get_education_score(sex,education) + \
             get_height_score(sex,height) + \
